@@ -2,14 +2,8 @@
     require_once("conexao.php");// importar o conexao.php para esta página
     $usuario = $_POST["usuario"];
     $senha = $_POST["senha"];
-
-    /*
-    //abrir banco de dados:
-    $host_bd = "localhost";
-    $login_bd = "root";
-    $password_bd = "";
-    $nome_bd = "labdbprog2";
-    $port = 3307;*/
+    
+    /* VALIDA O ACESSO AO SISTEMA */
 
     //zerar as sessões:
     session_start();
@@ -37,17 +31,19 @@
                 //usuário autenticado!
                 $_SESSION["cod_usuario"] = $cod_usuario;
                 header("location:principal.php");
-                //echo("Conectou!");
+                exit;
             }else{
                 //usuário não autenticado
-                header("location:index.php");
-                //echo("Não conectou :(");
+                header("location:login.php?erro=1");
+                exit;
             }
         }else{
-            echo "‼ Não achei o usuário!!!";
+            header("location:login.php?erro=1");
+            exit;
         }
     }else{
-        echo "Não achei o usuário!!!";
+        header("location:login.php?erro=1");
+        exit;
     }
     //validar no banco de dados
     //ir para página autenticada

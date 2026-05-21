@@ -17,17 +17,6 @@ if($consulta = mysqli_fetch_assoc($result)){ //leitura do array
     $nomeUsuario  = $consulta['nome'];
     $emailUsuario = $consulta['email'];
 }
-/* ============================================================
-   principal.php - Dashboard de Agendamento de Consultas Médicas
-   ------------------------------------------------------------
-   TODO: Adicionar validação de sessão aqui (após implementar login)
-   Ex:
-   session_start();
-   if (!isset($_SESSION['operador'])) {
-       header("Location: login.php");
-       exit;
-   }
-============================================================ */
 
 /* ============================================================
    DADOS DO OPERADOR LOGADO
@@ -61,11 +50,7 @@ $proximoMes = $mesAtual + 1;
 $proximoAno = $anoAtual;
 if ($proximoMes > 12) { $proximoMes = 1; $proximoAno++; }
 
-/* ============================================================
-   AGENDAMENTOS FICTÍCIOS (placeholder para visualização)
-   REMOVER QUANDO INTEGRAR COM O BANCO DE DADOS
-   Estrutura esperada: chave = dia do mês, valor = array de agendamentos
-============================================================ */
+
 $sql = "select *, DAY(data) diaAgenda from vw_agendamentos where MONTH(data) = $mesAtual AND YEAR(data) = $anoAtual";
 $result = mysqli_query($conexao_bd,$sql);
 while($row = $result->fetch_assoc()){
@@ -79,34 +64,7 @@ while($row = $result->fetch_assoc()){
         'status'        => $row["status"]
     ];
 }
-/*
-$agendamentosFicticios = [
-    5  => [
-        ['id' => 1, 'horario' => '09:00', 'paciente' => 'Maria Souza',     'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-    ],
-    8  => [
-        ['id' => 2, 'horario' => '10:30', 'paciente' => 'Carlos Andrade',  'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Confirmado'],
-        ['id' => 3, 'horario' => '14:00', 'paciente' => 'Juliana Reis',    'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Pendente'],
-    ],
-    12 => [
-        ['id' => 4, 'horario' => '08:00', 'paciente' => 'Pedro Henrique',  'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Confirmado'],
-    ],
-    15 => [
-        ['id' => 5, 'horario' => '11:00', 'paciente' => 'Júlia Mendes',    'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-        ['id' => 6, 'horario' => '15:30', 'paciente' => 'Roberto Dias',    'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Confirmado'],
-        ['id' => 7, 'horario' => '16:30', 'paciente' => 'Fernanda Costa',  'medico' => 'Dra. Marina Reis', 'especialidade' => 'Pediatria',    'status' => 'Pendente'],
-        ['id' => 8, 'horario' => '17:30', 'paciente' => 'Lucas Silva',     'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-    ],
-    20 => [
-        ['id' => 9, 'horario' => '09:30', 'paciente' => 'Luiz Henrique',   'medico' => 'Dra. Marina Reis', 'especialidade' => 'Pediatria',    'status' => 'Confirmado'],
-    ],
-    23 => [
-        ['id' => 10,'horario' => '10:00', 'paciente' => 'Beatriz Ramos',   'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Pendente'],
-    ],
-    27 => [
-        ['id' => 11,'horario' => '14:00', 'paciente' => 'Marcos Vinícius', 'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Confirmado'],
-    ],
-];*/
+
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -127,19 +85,21 @@ $agendamentosFicticios = [
 
     <!-- ================ ESTILOS DA APLICAÇÃO ================ -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         :root {
-            --azul-primario: #0d6efd;
-            --azul-escuro:   #084298;
-            --azul-claro:    #e7f1ff;
-            --cinza-fundo:   #f5f7fa;
-            --cinza-borda:   #e3e6ea;
-            --texto-escuro:  #1f2d3d;
-            --sidebar-larg:  250px;
+            --azul-primario: #2563eb;
+            --azul-escuro:   #1e40af;
+            --azul-claro:    #eff6ff;
+            --cinza-fundo:   #f8fafc;
+            --cinza-borda:   #e2e8f0;
+            --texto-escuro:  #0f172a;
+            --sidebar-larg:  260px;
         }
 
         body {
             background-color: var(--cinza-fundo);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Inter', sans-serif;
             color: var(--texto-escuro);
             overflow-x: hidden;
         }
@@ -148,7 +108,7 @@ $agendamentosFicticios = [
         .navbar-topo {
             background: linear-gradient(90deg, var(--azul-primario) 0%, var(--azul-escuro) 100%);
             height: 60px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 1030;
@@ -286,8 +246,8 @@ $agendamentosFicticios = [
         /* ==================== CALENDÁRIO ==================== */
         .card-calendario {
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
             border: 1px solid var(--cinza-borda);
             overflow: hidden;
         }
@@ -464,7 +424,7 @@ $agendamentosFicticios = [
                 <li><a class="dropdown-item" href="#"><i class="fa-solid fa-user"></i><?php echo htmlspecialchars($operadorNome) ?></a></li>
                 <li><a class="dropdown-item" href="#"><i class="fa-solid fa-envelope"></i><?php echo htmlspecialchars($operadorEmail) ?></a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-gear"></i>Configurações</a></li>
+                <li><a class="dropdown-item" href="perfil.php"><i class="fa-solid fa-gear"></i>Configurações</a></li>
                 <li><a class="dropdown-item" href="logout.php"><i class="fa-solid fa-right-from-bracket"></i>Sair</a></li>
             </ul>
         </div>
@@ -485,7 +445,7 @@ $agendamentosFicticios = [
                 <a class="nav-link" href="cadastro_medicos.php"><i class="fa-solid fa-user-doctor"></i> Cadastro de Médicos</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fa-solid fa-list-check"></i> Cadastro de Especialidades</a>
+                <a class="nav-link" href="cadastro_especialidades.php"><i class="fa-solid fa-list-check"></i> Cadastro de Especialidades</a>
             </li>
         </ul>
     </aside>

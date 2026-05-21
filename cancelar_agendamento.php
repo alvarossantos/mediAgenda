@@ -1,4 +1,27 @@
 <?php
+session_start();
+require_once("conexao.php");
+
+if (!isset($_SESSION['cod_usuario'])) {
+    header("Location: login.php");
+    exit;
+}
+
+$cod_usuario = $_SESSION["cod_usuario"];
+$nomeUsuario = "";
+$emailUsuario = "";
+$sql = "SELECT * FROM usuario WHERE cod_usuario = '$cod_usuario'";
+
+$result = mysqli_query($conexao_bd, $sql);
+
+if ($consulta = mysqli_fetch_assoc($result)) {
+    $nomeUsuario = $consulta["nome"];
+    $emailUsuario = $consulta["email"];
+}
+
+$operadorNome = $nomeUsuario;
+$operadorEmail = $emailUsuario;
+
 /* ============================================================
    cancelar_agendamento.php
    Endpoint chamado via fetch() pelo principal.php para
@@ -31,29 +54,6 @@ if ($id <= 0) {
 }
 
 /* ============================================================
-   CONEXÃO COM O BANCO DE DADOS
-   TODO: Mover as credenciais para um arquivo de configuração
-         (ex: config.php) fora da pasta pública
-
-   Exemplo de config.php:
-   define('DB_HOST', 'localhost');
-   define('DB_NAME', 'mediagenda');
-   define('DB_USER', 'root');
-   define('DB_PASS', '');
-============================================================ */
-
-// require_once '../config.php';
-
-// $conexao = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-// $conexao->set_charset('utf8mb4');
-
-// if ($conexao->connect_error) {
-//     http_response_code(500);
-//     echo json_encode(array('sucesso' => false, 'mensagem' => 'Erro de conexão com o banco.'));
-//     exit;
-// }
-
-/* ============================================================
    CANCELAMENTO DO AGENDAMENTO
    Utiliza exclusão lógica: atualiza o status para 'Cancelado'
    em vez de remover o registro fisicamente da tabela.
@@ -62,32 +62,31 @@ if ($id <= 0) {
    $sql = 'DELETE FROM agendamentos WHERE id = ?';
 ============================================================ */
 
-// $sql  = "UPDATE agendamentos SET status = 'Cancelado' WHERE id = ?";
-// $stmt = $conexao->prepare($sql);
+$sql  = "UPDATE agendamentos SET status = 'Cancelado' WHERE id = ?";
+$stmt = mysqli_prepare($conexao_bd, $sql);
 
-// if (!$stmt) {
-//     http_response_code(500);
-//     echo json_encode(array('sucesso' => false, 'mensagem' => 'Erro ao preparar a query.'));
-//     $conexao->close();
-//     exit;
-// }
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode(array('sucesso' => false, 'mensagem' => 'Erro ao preparar a query.'));
+    mysqli_close($conexao_bd);
+    exit;
+}
 
-// $stmt->bind_param('i', $id);
-// $stmt->execute();
+mysqli_stmt_bind_param($stmt, 'i', $id);
+mysqli_stmt_execute($stmt);
 
-// if ($stmt->affected_rows === 0) {
-//     http_response_code(404);
-//     echo json_encode(array('sucesso' => false, 'mensagem' => 'Agendamento não encontrado.'));
-//     $stmt->close();
-//     $conexao->close();
-//     exit;
-// }
+if (mysqli_stmt_affected_rows($stmt) === 0) {
+    http_response_code(404);
+    echo json_encode(array('sucesso' => false, 'mensagem' => 'Agendamento não encontrado ou já cancelado.'));
+    mysqli_stmt_close($stmt);
+    mysqli_close($conexao_bd);
+    exit;
+}
 
-// $stmt->close();
-// $conexao->close();
+mysqli_stmt_close($stmt);
+mysqli_close($conexao_bd);
 
 /* ============================================================
    RESPOSTA DE SUCESSO
-   TODO: remover este echo após descomentar o bloco acima
 ============================================================ */
 echo json_encode(array('sucesso' => true));

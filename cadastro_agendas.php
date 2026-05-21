@@ -25,64 +25,54 @@ if($consulta = mysqli_fetch_assoc($result)){ //leitura do array
 $operadorNome  = $nomeUsuario;
 $operadorEmail = $emailUsuario;
 
-/* ============================================================
-   PROCESSAMENTO DE AÇÕES (POST)
-   TODO: Implementar as ações ao integrar com o banco de dados
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $acao = isset($_POST['acao']) ? $_POST['acao'] : '';
+    if ($acao === 'novo') {
+        $paciente      = $_POST['paciente'];
+        $medico_id     = $_POST['medico_id'];
+        $especialidade = $_POST['especialidade'];
+        $data          = $_POST['data'];
+        $horario       = $_POST['horario'];
+        $status        = $_POST['status'];
+        
+        $sql_esp = "SELECT especialidade_id FROM medicos WHERE id = '$medico_id'";
+        $res_esp = mysqli_query($conexao_bd, $sql_esp);
+        $row_esp = mysqli_fetch_assoc($res_esp);
+        $especialidade_id = $row_esp ? $row_esp['especialidade_id'] : 1;
 
-   Estrutura esperada para receber via $_POST:
-   - acao        : 'novo' | 'editar' | 'cancelar'
-   - id          : int  (apenas para editar/cancelar)
-   - paciente    : string
-   - medico_id   : int
-   - especialidade_id : int
-   - data        : 'YYYY-MM-DD'
-   - horario     : 'HH:MM'
-   - status      : 'Confirmado' | 'Pendente'
-*/
-echo (">>> passou 0 | " . $_SERVER['REQUEST_METHOD']);
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        echo (">>> passou 1");
-        $acao = isset($_POST['acao']) ? $_POST['acao'] : '';
-        if ($acao === 'novo') {
-            $paciente      = $_POST['paciente'];
-            $medico_id     = $_POST['medico_id'];
-            $especialidade = $_POST['especialidade'];
-            $data          = $_POST['data'];
-            $horario       = $_POST['horario'];
-            $status        = $_POST['status'];
-            $sql           = "INSERT INTO 
-                              agendamentos(paciente, medico_id, especialidade_id, data, horario, status) 
-                              VALUES('".$paciente."', ".$medico_id.", 1, '".$data."',
-                              '".$horario."', '".$status."')";
-            mysqli_query($conexao_bd, $sql) or die('ERR: '.mysql_error());
-           // INSERT INTO agendamentos (...) VALUES (...)
-        } elseif ($acao === 'editar') {
-            $paciente      = $_POST['paciente'];
-            $medico_id     = $_POST['medico_id'];
-            $especialidade = $_POST['especialidade'];
-            $data          = $_POST['data'];
-            $horario       = $_POST['horario'];
-            $status        = $_POST['status'];
-            $id_agenda     = $_POST['id'];
-            $sql = "UPDATE agendamentos SET 
-                     paciente = '".$paciente."',
-                     medico_id = ".$medico_id.",
-                     especialidade_id = 1, 
-                     data = '".$data."',
-                     horario = '".$horario."',
-                     status  = '".$status."'
-                    WHERE id = ".$id_agenda;
-            mysqli_query($conexao_bd, $sql) or die("ERR.: ".mysql_error());
-        } elseif ($acao === 'cancelar') {
-            $id_agenda     = $_POST['id'];
-            $sql = "DELETE FROM agendamentos WHERE id = ".$id_agenda;
-            mysqli_query($conexao_bd, $sql) or die("ERR.: ".mysql_error());
-           // UPDATE agendamentos SET status = 'Cancelado' WHERE id = ?
-       }
-       //header("Location: cadastro_agendas.php");
-       //exit;
+        $sql           = "INSERT INTO 
+                            agendamentos(paciente, medico_id, especialidade_id, data, horario, status) 
+                            VALUES('".$paciente."', ".$medico_id.", ".$especialidade_id.", '".$data."',
+                            '".$horario."', '".$status."')";
+        mysqli_query($conexao_bd, $sql) or die('ERR: '.mysqli_error());
+        // INSERT INTO agendamentos (...) VALUES (...)
+    } elseif ($acao === 'editar') {
+        $paciente      = $_POST['paciente'];
+        $medico_id     = $_POST['medico_id'];
+        $especialidade = $_POST['especialidade'];
+        $data          = $_POST['data'];
+        $horario       = $_POST['horario'];
+        $status        = $_POST['status'];
+        $id_agenda     = $_POST['id'];
+        
+        $sql_esp = "SELECT especialidade_id FROM medicos WHERE id = '$medico_id'";
+        $res_esp = mysqli_query($conexao_bd, $sql_esp);
+        $row_esp = mysqli_fetch_assoc($res_esp);
+        $especialidade_id = $row_esp ? $row_esp['especialidade_id'] : 1;
+
+        $sql = "UPDATE agendamentos SET 
+                    paciente = '".$paciente."',
+                    medico_id = ".$medico_id.",
+                    especialidade_id = ".$especialidade_id.", 
+                    data = '".$data."',
+                    horario = '".$horario."',
+                    status  = '".$status."'
+                WHERE id = ".$id_agenda;
+        mysqli_query($conexao_bd, $sql) or die("ERR.: ".mysqli_error());
     }
-//============================================================ */
+    header("Location: cadastro_agendas.php");
+    exit;
+}
 
 /* ============================================================
    FILTROS DE BUSCA
@@ -97,81 +87,51 @@ $filtroStatus   = trim(isset($_GET['status'])   ? $_GET['status']   : '');
 $filtroDataIni  = trim(isset($_GET['data_ini']) ? $_GET['data_ini'] : '');
 $filtroDataFim  = trim(isset($_GET['data_fim']) ? $_GET['data_fim'] : '');
 
-/* ============================================================
-   AGENDAMENTOS FICTÍCIOS (placeholder para visualização)
-   REMOVER QUANDO INTEGRAR COM O BANCO DE DADOS
-   TODO: Substituir por:
-   $agendamentos = buscarAgendamentos($filtroPaciente, $filtroMedico, $filtroStatus, $filtroDataIni, $filtroDataFim);
-============================================================ 
-$agendamentos = [
-    ['id' =>  1, 'data' => '2026-04-05', 'horario' => '09:00', 'paciente' => 'Maria Souza',     'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-    ['id' =>  2, 'data' => '2026-04-08', 'horario' => '10:30', 'paciente' => 'Carlos Andrade',  'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Confirmado'],
-    ['id' =>  3, 'data' => '2026-04-08', 'horario' => '14:00', 'paciente' => 'Juliana Reis',    'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Pendente'],
-    ['id' =>  4, 'data' => '2026-04-12', 'horario' => '08:00', 'paciente' => 'Pedro Henrique',  'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Confirmado'],
-    ['id' =>  5, 'data' => '2026-04-15', 'horario' => '11:00', 'paciente' => 'Júlia Mendes',    'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-    ['id' =>  6, 'data' => '2026-04-15', 'horario' => '15:30', 'paciente' => 'Roberto Dias',    'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Confirmado'],
-    ['id' =>  7, 'data' => '2026-04-15', 'horario' => '16:30', 'paciente' => 'Fernanda Costa',  'medico' => 'Dra. Marina Reis', 'especialidade' => 'Pediatria',    'status' => 'Pendente'],
-    ['id' =>  8, 'data' => '2026-04-15', 'horario' => '17:30', 'paciente' => 'Lucas Silva',     'medico' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia',  'status' => 'Confirmado'],
-    ['id' =>  9, 'data' => '2026-04-20', 'horario' => '09:30', 'paciente' => 'Luiz Henrique',   'medico' => 'Dra. Marina Reis', 'especialidade' => 'Pediatria',    'status' => 'Confirmado'],
-    ['id' => 10, 'data' => '2026-04-23', 'horario' => '10:00', 'paciente' => 'Beatriz Ramos',   'medico' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia', 'status' => 'Pendente'],
-    ['id' => 11, 'data' => '2026-04-27', 'horario' => '14:00', 'paciente' => 'Marcos Vinícius', 'medico' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia',    'status' => 'Confirmado'],
-];*/
-$sql = "SELECT * FROM vw_agendamentos";
-$result = mysqli_query($conexao_bd, $sql);
-while ($row = mysqli_fetch_assoc($result)) {
-    $agendamentos[] = [
-        'id'            => $row['id'],
-        'data'          => $row['data'],
-        'horario'       => $row['horario'],
-        'paciente'      => $row['paciente'],
-        'medico'        => $row['medico'],
-        'especialidade' => $row['especialidade'],
-        'status'        => $row['status']
-    ];
+$agendamentos = [];
+$sql = "SELECT * FROM vw_agendamentos WHERE 1=1";
+
+if ($filtroPaciente !== '') {
+    $sql .= " AND paciente LIKE '%" . mysqli_real_escape_string($conexao_bd, $filtroPaciente) . "%'";
+}
+if ($filtroMedico !== '') {
+    $sql .= " AND medico = '" . mysqli_real_escape_string($conexao_bd, $filtroMedico) . "'";
+}
+if ($filtroStatus !== '') {
+    $sql .= " AND status = '" . mysqli_real_escape_string($conexao_bd, $filtroStatus) . "'";
+}
+if ($filtroDataIni !== '') {
+    $sql .= " AND data >= '" . mysqli_real_escape_string($conexao_bd, $filtroDataIni) . "'";
+}
+if ($filtroDataFim !== '') {
+    $sql .= " AND data <= '" . mysqli_real_escape_string($conexao_bd, $filtroDataFim) . "'";
 }
 
+$sql .= " ORDER BY data ASC, horario ASC";
 
-/* ============================================================
-   APLICAÇÃO DOS FILTROS NOS DADOS FICTÍCIOS
-   TODO: Remover este bloco ao integrar com o banco —
-         a filtragem passará a ser feita diretamente na query SQL
-============================================================ */
-if ($filtroPaciente !== '' || $filtroMedico !== '' || $filtroStatus !== ''
-    || $filtroDataIni !== '' || $filtroDataFim !== '') {
-
-    $agendamentos = array_values(array_filter($agendamentos, function($ag) use (
-        $filtroPaciente, $filtroMedico, $filtroStatus, $filtroDataIni, $filtroDataFim
-    ) {
-        if ($filtroPaciente !== '' && stripos($ag['paciente'], $filtroPaciente) === false) {
-            return false;
-        }
-        if ($filtroMedico !== '' && $ag['medico'] !== $filtroMedico) {
-            return false;
-        }
-        if ($filtroStatus !== '' && $ag['status'] !== $filtroStatus) {
-            return false;
-        }
-        if ($filtroDataIni !== '' && $ag['data'] < $filtroDataIni) {
-            return false;
-        }
-        if ($filtroDataFim !== '' && $ag['data'] > $filtroDataFim) {
-            return false;
-        }
-        return true;
-    }));
+$result = mysqli_query($conexao_bd, $sql);
+if ($result) {
+    while ($row = mysqli_fetch_assoc($result)) {
+        $agendamentos[] = [
+            'id'            => $row['id'],
+            'data'          => $row['data'],
+            'horario'       => $row['horario'],
+            'paciente'      => $row['paciente'],
+            'medico'        => $row['medico'],
+            'especialidade' => $row['especialidade'],
+            'status'        => $row['status']
+        ];
+    }
 }
 
 /* ============================================================
    MÉDICOS DISPONÍVEIS
-   TODO: Substituir por consulta ao banco:
-   $medicos = buscarMedicos();
 ============================================================ */
-$medicos = [
-    ['id' => 1, 'nome' => 'Dr. Carlos Lima',  'especialidade' => 'Cardiologia'],
-    ['id' => 2, 'nome' => 'Dra. Ana Paula',   'especialidade' => 'Dermatologia'],
-    ['id' => 3, 'nome' => 'Dr. Pedro Alves',  'especialidade' => 'Ortopedia'],
-    ['id' => 4, 'nome' => 'Dra. Marina Ana Reis', 'especialidade' => 'Pediatria'],
-];
+$medicos = [];
+$sql_medicos = "SELECT m.id, m.nome, e.nome as especialidade FROM medicos m JOIN especialidades e ON m.especialidade_id = e.id WHERE m.status = 'Ativo' ORDER BY m.nome";
+$res_medicos = mysqli_query($conexao_bd, $sql_medicos);
+while ($row_medico = mysqli_fetch_assoc($res_medicos)) {
+    $medicos[] = $row_medico;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -187,24 +147,29 @@ $medicos = [
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <!-- Select2 CSS + Tema Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
     <!-- Font Awesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <!-- ================ ESTILOS DA APLICAÇÃO ================ -->
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         :root {
-            --azul-primario: #0d6efd;
-            --azul-escuro:   #084298;
-            --azul-claro:    #e7f1ff;
-            --cinza-fundo:   #f5f7fa;
-            --cinza-borda:   #e3e6ea;
-            --texto-escuro:  #1f2d3d;
-            --sidebar-larg:  250px;
+            --azul-primario: #2563eb;
+            --azul-escuro:   #1e40af;
+            --azul-claro:    #eff6ff;
+            --cinza-fundo:   #f8fafc;
+            --cinza-borda:   #e2e8f0;
+            --texto-escuro:  #0f172a;
+            --sidebar-larg:  260px;
         }
 
         body {
             background-color: var(--cinza-fundo);
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Inter', sans-serif;
             color: var(--texto-escuro);
             overflow-x: hidden;
         }
@@ -213,7 +178,7 @@ $medicos = [
         .navbar-topo {
             background: linear-gradient(90deg, var(--azul-primario) 0%, var(--azul-escuro) 100%);
             height: 60px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 1030;
@@ -372,8 +337,8 @@ $medicos = [
         /* ==================== CARD GENÉRICO ==================== */
         .card-pagina {
             background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
             border: 1px solid var(--cinza-borda);
             padding: 20px 24px;
             margin-bottom: 20px;
@@ -483,8 +448,8 @@ $medicos = [
                 <li><a class="dropdown-item" href="#"><i class="fa-solid fa-user"></i><?php echo htmlspecialchars($operadorNome) ?></a></li>
                 <li><a class="dropdown-item" href="#"><i class="fa-solid fa-envelope"></i><?php echo htmlspecialchars($operadorEmail) ?></a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-gear"></i>Configurações</a></li>
-                <li><a class="dropdown-item" href="#"><i class="fa-solid fa-right-from-bracket"></i>Sair</a></li>
+                <li><a class="dropdown-item" href="perfil.php"><i class="fa-solid fa-gear"></i>Configurações</a></li>
+                <li><a class="dropdown-item" href="logout.php"><i class="fa-solid fa-right-from-bracket"></i>Sair</a></li>
             </ul>
         </div>
     </nav>
@@ -504,7 +469,7 @@ $medicos = [
                 <a class="nav-link" href="cadastro_medicos.php"><i class="fa-solid fa-user-doctor"></i> Cadastro de Médicos</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#"><i class="fa-solid fa-list-check"></i> Cadastro de Especialidades</a>
+                <a class="nav-link" href="cadastro_especialidades.php"><i class="fa-solid fa-list-check"></i> Cadastro de Especialidades</a>
             </li>
         </ul>
     </aside>
@@ -641,6 +606,19 @@ $medicos = [
                                 <td><?php echo htmlspecialchars($ag['especialidade']) ?></td>
                                 <td><span class="badge-status <?php echo $classeBadge ?>"><?php echo htmlspecialchars($ag['status']) ?></span></td>
                                 <td class="text-center" style="white-space:nowrap;">
+                                    <div class="d-flex justify-content-center gap-1">
+                                    <?php if ($ag['status'] === 'Pendente'): ?>
+                                    <button class="btn btn-sm btn-outline-success py-0 px-2 btn-confirmar"
+                                            title="Confirmar agendamento"
+                                            data-id="<?php echo $ag['id'] ?>"
+                                            data-paciente="<?php echo htmlspecialchars($ag['paciente']) ?>">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <?php else: ?>
+                                    <button class="btn btn-sm py-0 px-2 invisible" disabled>
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <?php endif; ?>
                                     <!-- TODO: passar dados reais para o modal de edição -->
                                     <button class="btn btn-sm btn-outline-primary py-0 px-2 btn-editar"
                                             title="Editar"
@@ -660,6 +638,7 @@ $medicos = [
                                             data-paciente="<?php echo htmlspecialchars($ag['paciente']) ?>">
                                         <i class="fa-solid fa-ban"></i>
                                     </button>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -722,7 +701,7 @@ $medicos = [
                                  name="medico_id" required>
                                     <option value="">Selecione...</option>
                                     <?php foreach ($medicos as $m): ?>
-                                        <option value="<?php echo $m['id'] ?>"><?php echo htmlspecialchars($m['nome']) ?></option>
+                                        <option value="<?php echo $m['id'] ?>" data-especialidade="<?php echo htmlspecialchars($m['especialidade']) ?>"><?php echo htmlspecialchars($m['nome']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -730,8 +709,7 @@ $medicos = [
                                 <label for="formEspecialidade">Especialidade <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" 
                                 id="formEspecialidade"
-                                       name="especialidade" placeholder="Ex: Cardiologia" required>
-                                <!-- TODO: preencher automaticamente ao selecionar o médico -->
+                                           name="especialidade" placeholder="Preenchida automaticamente" readonly required>
                             </div>
                             <div class="col-md-6">
                                 <label for="formData">Data <span class="text-danger">*</span></label>
@@ -756,12 +734,11 @@ $medicos = [
 
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                        <!-- TODO: mudar para type="submit" ao integrar com banco -->
-                        <button type="submit" class="btn btn-primary" onclick="salvarAgendamento()">
+                        <button type="submit" class="btn btn-primary">
                             <i class="fa-solid fa-floppy-disk me-1"></i> Salvar
                         </button>
                     </div>
-                </form>t
+                </form>
             </div>
         </div>
     </div>
@@ -771,6 +748,7 @@ $medicos = [
             integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // ==================================================
         // TOGGLE DA SIDEBAR (responsivo)
@@ -801,6 +779,27 @@ $medicos = [
         });
 
         // ==================================================
+        // AUTO-PREENCHER ESPECIALIDADE
+        // ==================================================
+        $(document).ready(function() {
+            $('#formMedico, #formStatus').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalFormAgenda'),
+                width: '100%'
+            });
+
+            $('#formMedico').on('change', function() {
+                var esp = $(this).find(':selected').attr('data-especialidade') || '';
+                $('#formEspecialidade').val(esp);
+            });
+            
+            $('#filtroMedico, #filtroStatus').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
+        });
+
+        // ==================================================
         // INSTÂNCIA ÚNICA DO MODAL E FLAG DE MODO
         // ==================================================
         var modalFormAgendaEl = document.getElementById('modalFormAgenda');
@@ -815,6 +814,8 @@ $medicos = [
                 document.getElementById('formAcao').value = 'novo';
                 document.getElementById('formId').value   = '';
                 document.getElementById('formAgenda').reset();
+                $('#formMedico').val('').trigger('change');
+                $('#formStatus').val('Pendente').trigger('change');
             }
             modoEdicao = false;
         });
@@ -825,6 +826,7 @@ $medicos = [
         document.querySelector('.tabela-agendamentos').addEventListener('click', function(e) {
             var btnEditar   = e.target.closest('.btn-editar');
             var btnCancelar = e.target.closest('.btn-cancelar');
+            var btnConfirmar = e.target.closest('.btn-confirmar');
            
             if (btnEditar) {
                 modoEdicao = true;
@@ -836,12 +838,14 @@ $medicos = [
                 document.getElementById('formData').value          = btnEditar.dataset.data;
                 document.getElementById('formHorario').value       = btnEditar.dataset.horario;
                 document.getElementById('formEspecialidade').value = btnEditar.dataset.especialidade;
-                document.getElementById('formStatus').value        = btnEditar.dataset.status;
+                
+                $('#formStatus').val(btnEditar.dataset.status).trigger('change');
 
                 var sel = document.getElementById('formMedico');
                 for (var i = 0; i < sel.options.length; i++) {
                     if (sel.options[i].text === btnEditar.dataset.medico) {
                         sel.selectedIndex = i;
+                    $('#formMedico').trigger('change'); // Atualiza a interface do Select2 e a Especialidade
                         break;
                     }
                 }
@@ -860,33 +864,109 @@ $medicos = [
                     cancelButtonText:   'Voltar'
                 }).then(function(result) {
                     
-                    var var_acao = "cancelar";
                     var id_agenda = btnCancelar.dataset.id;
 
                     if (result.isConfirmed) {
-                        // TODO: substituir pelo envio real ao banco
-                        bodyContent = $.ajax({
-                            url: "cadastro_agendas.php",
-                            global: false,
-                            type: "POST",
-                            data: ({id: id_agenda, acao: var_acao}),
-                            dataType: "html",
-                            async:false,
-                            success: function(msg){
-                                return msg;
+                        fetch('cancelar_agendamento.php', {
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body:    'id=' + id_agenda
+                        })
+                        .then(function(response) { return response.json(); })
+                        .then(function(dados) {
+                            if (!dados.sucesso) {
+                                Swal.fire({
+                                    icon:               'error',
+                                    title:              'Erro',
+                                    text:               dados.mensagem || 'Não foi possível cancelar o agendamento.',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return;
                             }
-                        }).responseText;
-                        //btnCancelar.closest('tr').remove();
-                        //atualizarContadorAgenda();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Cancelado!',
-                            text: 'O agendamento foi cancelado.',
-                            confirmButtonColor: '#0d6efd',
-                            timer: 2000,
-                            showConfirmButton: false
+
+                            Swal.fire({
+                                icon:               'success',
+                                title:              'Cancelado!',
+                                text:               'O agendamento foi cancelado com sucesso.',
+                                confirmButtonColor: '#0d6efd',
+                                timer:              2000,
+                                showConfirmButton:  false
+                            }).then(function() {
+                                window.location.reload();
+                            });
+                        })
+                        .catch(function() {
+                            Swal.fire({
+                                icon:               'error',
+                                title:              'Erro de comunicação',
+                                text:               'Não foi possível conectar ao servidor. Tente novamente.',
+                                confirmButtonColor: '#0d6efd'
+                            });
                         });
-                        window.location.href = "cadastro_agendas.php";
+                    }
+                });
+            }
+
+            if (btnConfirmar) {
+                Swal.fire({
+                    title: 'Confirmar agendamento?',
+                    html: 'Deseja confirmar o agendamento de <strong>' + btnConfirmar.dataset.paciente + '</strong>?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor:  '#6c757d',
+                    confirmButtonText:  'Sim, confirmar',
+                    cancelButtonText:   'Voltar'
+                }).then(function(result) {
+                    if (result.isConfirmed) {
+                        var id_agenda = btnConfirmar.dataset.id;
+                        
+                        fetch('confirmar_agendamento.php', {
+                            method:  'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body:    'id=' + id_agenda
+                        })
+                        .then(function(response) { return response.json(); })
+                        .then(function(dados) {
+                            if (!dados.sucesso) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Erro',
+                                    text: dados.mensagem || 'Não foi possível confirmar o agendamento.',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                                return;
+                            }
+
+                            var tr = btnConfirmar.closest('tr');
+                            if (tr) {
+                                var badge = tr.querySelector('.badge-status');
+                                if (badge) {
+                                    badge.textContent = 'Confirmado';
+                                    badge.className = 'badge-status badge-confirmado';
+                                }
+                                btnConfirmar.classList.add('invisible');
+                                btnConfirmar.classList.remove('btn-confirmar', 'btn-outline-success');
+                                btnConfirmar.disabled = true;
+                            }
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Confirmado!',
+                                text: 'O agendamento foi confirmado com sucesso.',
+                                confirmButtonColor: '#0d6efd',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        })
+                        .catch(function() {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro de comunicação',
+                                text: 'Não foi possível conectar ao servidor. Tente novamente.',
+                                confirmButtonColor: '#0d6efd'
+                            });
+                        });
                     }
                 });
             }
@@ -977,6 +1057,9 @@ $medicos = [
             var tdAc = document.createElement('td');
             tdAc.className        = 'text-center';
             tdAc.style.whiteSpace = 'nowrap';
+            
+            var divGroup = document.createElement('div');
+            divGroup.className = 'd-flex justify-content-center gap-1';
 
             var btnEdit = document.createElement('button');
             btnEdit.className              = 'btn btn-sm btn-outline-primary py-0 px-2 btn-editar';
@@ -997,8 +1080,22 @@ $medicos = [
             btnCan.dataset.id       = id;
             btnCan.dataset.paciente = paciente;
 
-            tdAc.appendChild(btnEdit);
-            tdAc.appendChild(btnCan);
+            var btnConf = document.createElement('button');
+            if (status === 'Pendente') {
+                btnConf.className = 'btn btn-sm btn-outline-success py-0 px-2 btn-confirmar';
+                btnConf.title = 'Confirmar agendamento';
+                btnConf.dataset.id = id;
+                btnConf.dataset.paciente = paciente;
+            } else {
+                btnConf.className = 'btn btn-sm py-0 px-2 invisible';
+                btnConf.disabled = true;
+            }
+            btnConf.innerHTML = '<i class="fa-solid fa-check"></i>';
+            divGroup.appendChild(btnConf);
+
+            divGroup.appendChild(btnEdit);
+            divGroup.appendChild(btnCan);
+            tdAc.appendChild(divGroup);
             tr.appendChild(tdId); tr.appendChild(tdDt); tr.appendChild(tdHr);
             tr.appendChild(tdPa); tr.appendChild(tdMe); tr.appendChild(tdEs);
             tr.appendChild(tdSt); tr.appendChild(tdAc);

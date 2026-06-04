@@ -4,10 +4,10 @@
 
 // Carrega as dependências do Composer, incluindo o autoloader do phpdotenv.
 // __DIR__ garante que o caminho é sempre relativo ao arquivo atual (conexao.php).
-require_once __DIR__ . '/vendor/autoload.php';
+require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 // Carrega as variáveis de ambiente do arquivo .env que está na raiz do projeto.
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
+$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
 $dotenv->load();
 
 // Pega as credenciais do banco de dados das variáveis de ambiente.

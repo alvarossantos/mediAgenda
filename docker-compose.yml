@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mediagenda_app
+    ports:
+      - "8000:80"
+    volumes:
+      # Mapeia o código fonte para a pasta pública do Apache
+      - ./src:/var/www/html
+      # Mapeia o vendor e o .env para FORA da pasta pública por segurança
+      - ./vendor:/var/www/vendor
+      - ./.env:/var/www/.env
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:10.6
+    container_name: mediagenda_db
+    restart: always
+    environment:
+      # Estas variáveis devem bater com as do seu arquivo .env
+      MYSQL_ROOT_PASSWORD: sua_senha
+      MYSQL_DATABASE: labdbprog2
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      # Executa o script.sql automaticamente ao inicializar o banco zerado
+      - ./script.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  db_data:
